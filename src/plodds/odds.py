@@ -22,7 +22,7 @@ def overround(home, draw, away):
     >>> round(overround(1.9, 3.6, 4.2), 4)
     0.0422
     """
-    raise NotImplementedError
+    return 1/home + 1/draw + 1/away - 1
 
 
 def implied_probabilities(home, draw, away):
@@ -41,4 +41,5 @@ def implied_probabilities(home, draw, away):
     Stretch: proportional normalisation is known to be slightly unfair to
     favourites (look up "favourite-longshot bias" and "Shin's method").
     """
-    raise NotImplementedError
+    output = np.stack([1/home, 1/draw, 1/away], axis=-1)
+    return output / np.sum(output, axis=-1, keepdims=True)
