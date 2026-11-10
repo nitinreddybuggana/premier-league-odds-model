@@ -1,0 +1,11 @@
+# Downloaded data and the database built from it (re-create with `plodds download` and `plodds build-db`)
+data/
+
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+.ipynb_checkpoints/
+.DS_Store
