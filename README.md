@@ -6,8 +6,8 @@ fits a Poisson model of football scores to ten seasons of Premier League
 results, compares its probabilities with the bookmakers', and backtests a
 value-betting strategy strictly out of sample.
 
-> **Status: in progress.** The data pipeline and database are done and tested.
-> The model, evaluation and backtest are being written. Results will go here.
+> **Status: in progress.** The data pipeline, database and odds conversion are
+> done and tested. The model, evaluation and backtest are being written.
 
 ## How it works
 
@@ -25,6 +25,40 @@ football-data.co.uk CSVs ──> clean ──> SQLite ──> Poisson model ─�
    on matches played before it. No prediction ever sees its own result.
 4. **Evaluation.** Model and market are scored on log loss, Brier score and
    calibration, and a betting simulation reports ROI and drawdown.
+
+## Findings so far
+
+### The bookmaker's margin
+
+Adding up 1/odds for home, draw and away gives more than 100%. The excess is
+the *overround*, the bookmaker's margin. Averaged over 3,800 matches
+(2016-17 to 2025-26):
+
+| Odds | Average overround | Why |
+|---|---|---|
+| Bet365 | 4.68% | One firm's actual margin |
+| Market average | 4.41% | Averaging prices leaves roughly a typical firm's margin in place |
+| Best price in the market | 0.21% | Taking the top price on each outcome separately removes most of the margin |
+
+The best-price overround was **negative in 1,585 matches (about 42%)**. When it
+is negative, backing all three outcomes at the best prices, with stakes in
+proportion to 1/odds, returns the same amount whatever the result: at −5%,
+£100 staked returns £100 / 0.95 = £105.26. That is arbitrage.
+
+No single bookmaker offers this. The best-price row is stitched together from
+different firms, and each firm keeps its own margin: Bet365's overround was
+never below 1.7% and the market average never below 3.4%. The opportunity comes
+from bookmakers disagreeing with each other, not from any one of them offering
+a losing book.
+
+In practice these figures overstate what could be collected. The best three
+prices may not have been available at the same moment, bookmakers limit
+accounts that arbitrage, and the most extreme case (−12.9%) is more likely a
+stale or mistyped quote than a real opportunity.
+
+**Consequence for the backtest:** a betting simulation priced at the best
+available odds would look better than anyone could achieve, so it uses Bet365
+or market-average odds instead.
 
 ## Setup
 
