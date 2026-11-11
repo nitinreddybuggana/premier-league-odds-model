@@ -60,6 +60,51 @@ stale or mistyped quote than a real opportunity.
 available odds would look better than anyone could achieve, so it uses Bet365
 or market-average odds instead.
 
+### Home advantage and crowds
+
+The 2020-21 season was played behind closed doors, which makes it a natural
+experiment on where home advantage comes from.
+
+| Season | Home win % | Away win % | Average home goal margin |
+|---|---|---|---|
+| 2016-17 | 49.2 | 28.7 | +0.39 |
+| 2017-18 | 45.5 | 28.4 | +0.38 |
+| 2018-19 | 47.6 | 33.7 | +0.32 |
+| 2019-20 | 45.3 | 30.5 | +0.31 |
+| **2020-21** | **37.9** | **40.3** | **+0.01** |
+
+| Period | Matches | Home win % | Away win % | Home goal margin |
+|---|---|---|---|---|
+| With crowds (Aug 2016 – Mar 2020) | 1,428 | 46.9 | 30.3 | +0.35 |
+| Behind closed doors (Jun 2020 – May 2021) | 452 | 38.9 | 38.5 | +0.07 |
+
+Without crowds, away teams won as often as home teams and the home goal margin
+fell by about 80%. Crowds look like a large part of home advantage. (A few
+matches in December 2020 had up to 2,000 fans; too few to change the picture.)
+
+This does not show that home advantage differs *between teams*, which is a
+separate question (see below).
+
+*Source for this table: Premier League results from
+[footballcsv/england](https://github.com/footballcsv/england), which covers
+seasons up to 2020-21.*
+
+## Model assumptions
+
+**One home advantage for the whole league.** Every team gets the same home
+boost. Some grounds may be genuinely harder to visit, but each team plays only
+19 home games a season, so a separate estimate per team would mostly pick up
+luck (a few narrow home wins would look like a "fortress"). One shared value
+uses every match and is estimated precisely: a bias–variance trade-off.
+
+Two known issues to test once the backtest works:
+
+1. **Team-specific home advantage**, ideally with shrinkage towards the league
+   average. Keep it only if it improves out-of-sample log loss.
+2. **The closed-doors period.** Training data that includes 2020-21 pulls the
+   shared home advantage down. Options: leave that period out of training, or
+   let home advantage vary by season.
+
 ## Setup
 
 ```bash
