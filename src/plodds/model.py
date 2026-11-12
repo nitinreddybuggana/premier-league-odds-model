@@ -48,7 +48,7 @@ Run `pytest tests/test_model.py` to check your work.
 
 import numpy as np
 import pandas as pd
-
+from scipy.optimize import minimize
 
 class PoissonModel:
     """Independent Poisson model with attack, defence and home advantage.
@@ -67,11 +67,50 @@ class PoissonModel:
         ``matches`` has columns home_team, away_team, home_goals, away_goals
         (other columns are ignored).
         """
-        raise NotImplementedError
+        teams = sorted(set(matches["home_team"]) | set(matches["away_team"]))
+        self.teams_ = teams
+        self._team_index = {team: i for i, team in enumerate(teams)}
+        n = len(teams)
+        
+        home_idx = matches["home_team"].map(self._team_index).to_numpy()
+        away_idx = matches["away_team"].map(self._team_index).to_numpy()
+        home_goals = matches["home_goals"].to_numpy()
+        away_goals = matches["away_goals"].to_numpy()
+        
+        def unpack(params):
+            c = params[0]
+            home_advantage = params[1]
+            attack = np.append(params[2:n + 1], -params[2:n + 1].sum())
+            defence = np.append(params[n + 1:], -params[n + 1:].sum())
+            return c, home_advantage, attack, defence
+        
+        def negative_log_likelihood(params):
+            c, home_advantage, attack, defence = unpack(params)
+            
+            lambda_home = np.exp(c + home_advantage + attack[home_idx] - defence[away_idx])
+            lambda_away = np.exp(c + attack[away_idx] - defence[home_idx])
+            
+            log_likelihood = (
+                np.sum(home_goals * np.log(lambda_home)) - np.sum(lambda_home)
+                + np.sum(away_goals * np.log(lambda_away)) - np.sum(lambda_away)
+            )
+            return -log_likelihood
+        
+        result = minimize(negative_log_likelihood, x0 = np.zeros(2*n))
+        
+        c, home_advantage, attack, defence = unpack(result.x)
+        self.intercept_ = float(c)
+        self.home_advantage_ = float(home_advantage)
+        self.attack_ = dict(zip(teams, attack))
+        self.defence_ = dict(zip(teams, defence))
+        return self
+
 
     def expected_goals(self, home_team: str, away_team: str) -> tuple[float, float]:
         """(lambda_home, lambda_away) for a fixture. KeyError for an unknown team."""
-        raise NotImplementedError
+        lambda_home = float(np.exp(self.intercept_ + self.home_advantage_ + self.attack_[home_team] - self.defence_[away_team]))
+        lambda_away = float(np.exp(self.intercept_ + self.attack_[away_team] - self.defence_[home_team]))
+        return lambda_home, lambda_away
 
     def score_matrix(self, home_team: str, away_team: str, max_goals: int = 10) -> np.ndarray:
         """Probability of every scoreline up to ``max_goals`` each.
