@@ -96,7 +96,9 @@ class PoissonModel:
             )
             return -log_likelihood
         
-        result = minimize(negative_log_likelihood, x0 = np.zeros(2*n))
+        result = minimize(negative_log_likelihood, x0 = np.zeros(2*n), method="L-BFGS-B")
+        if not result.success:
+            raise RuntimeError(f"Fit did not converge: {result.message}")
         
         c, home_advantage, attack, defence = unpack(result.x)
         self.intercept_ = float(c)
