@@ -119,7 +119,10 @@ class PoissonModel:
         [h, a] is P(home scores h and away scores a). Because the two counts are
         independent, this is the outer product of two Poisson pmf vectors.
         """
-        raise NotImplementedError
+        lambda_home, lambda_away = self.expected_goals(home_team, away_team)
+        home_probs = np.exp(-lambda_home) * np.power(lambda_home, np.arange(max_goals + 1)) / np.array([np.math.factorial(i) for i in range(max_goals + 1)])
+        away_probs = np.exp(-lambda_away) * np.power(lambda_away, np.arange(max_goals + 1)) / np.array([np.math.factorial(i) for i in range(max_goals + 1)])
+        return np.outer(home_probs, away_probs)
 
     def outcome_probabilities(self, home_team: str, away_team: str) -> np.ndarray:
         """[P(home win), P(draw), P(away win)], summing to 1.
@@ -128,4 +131,9 @@ class PoissonModel:
         are handy). The matrix stops at ``max_goals`` so the three sums fall a
         tiny bit short of 1; divide by their total.
         """
-        raise NotImplementedError
+        score_mat = self.score_matrix(home_team, away_team)
+        home_win_prob = np.tril(score_mat, -1).sum()
+        draw_prob = np.trace(score_mat)
+        away_win_prob = np.triu(score_mat, 1).sum()
+        total_prob = home_win_prob + draw_prob + away_win_prob
+        return np.array([home_win_prob, draw_prob, away_win_prob]) / total_prob
